@@ -53,9 +53,38 @@ var moveEnemies = function(){
   svg.selectAll("circle.enemy").data(enemiesArray)
                                .transition().duration(800)
                                .attr("cx", function(data){return data.x;})
-                               .attr("cy", function(data){return data.y;})
-                               .tween("collision", collisionDetection);
+                               .attr("cy", function(data){return data.y;});
 };
 
 //moving enemies every second
 setInterval(moveEnemies, 1000);
+
+//Player array for d3
+var playerArray = [{ x:0,
+  y:0,
+  r:8}];
+
+var drag = d3.behavior.drag()
+    .on("drag", function(d,i){
+      d.x += (d3.event.dx);
+      d.y += (d3.event.dy);
+      d3.select(this).attr("cx", function(d){return d.x;})
+                     .attr("cy", function(d){return d.y;});
+});
+
+//Put player on board
+var createPlayer = function (){
+  playerArray.forEach(function(element){
+    element.x = (gameOptions.width - 2 * gameOptions.padding) * 0.5;
+    element.y = (gameOptions.height - 2 * gameOptions.padding) * 0.5;
+  });
+  svg.selectAll("circle.player").data(playerArray)
+                             .enter().append("circle")
+                             .attr("class", "player")
+                             .attr("cx", function(d){return d.x;})
+                             .attr("cy", function(d){return d.y;})
+                             .attr("r", 8)
+                             .call(drag);
+};
+
+createPlayer();
