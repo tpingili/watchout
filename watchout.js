@@ -2,8 +2,13 @@ var gameOptions = {
   nEnemies: 30,
   width: 800,
   height: 500,
-  padding: 10
+  padding: 10,
 };
+
+var score = 0,
+  highScore = 0,
+  collisionCount = 0;
+var collision = false;
 
 var randomPosX = function(){
   return Math.floor(Math.random() * (gameOptions.width - 2 * gameOptions.padding));
@@ -23,6 +28,7 @@ var Enemy = function(i){
   this.id = i;
   this.x = randomPosX();
   this.y = randomPosY();
+  this.r = 8;
 };
 
 //pushing enemy objects into an array
@@ -40,10 +46,10 @@ var enemiesArray = createEnemies(gameOptions.nEnemies);
 svg.selectAll("circle.enemy").data(enemiesArray, function(data){return data.id;})
                              .enter().append("circle")
                              .attr("class", "enemy")
+                             .attr("id", function(data){return data.id;})
                              .attr("cx", function(data){return data.x;})
                              .attr("cy", function(data){return data.y;})
-                             .attr("r", 5)
-                             .transition().duration(500).attr("r",8);
+                             .attr("r", function(data){return data.r;});
 
 var moveEnemies = function(){
   enemiesArray.forEach(function(element){
@@ -56,20 +62,47 @@ var moveEnemies = function(){
                                .attr("cy", function(data){return data.y;});
 };
 
+var collisionDetection = function(enemy){
+
+  var player = playerArray[0];
+  for (var i = 0; i < enemiesArray.length; i ++){
+    var radiusSum = parseFloat(enemiesArray[i].r + player.r);
+    var xDiff = parseFloat(enemiesArray[i].x - player.x);
+    var yDiff = parseFloat(enemiesArray[i].y - player.y);
+    var separation = Math.sqrt( Math.pow(xDiff,2) + Math.pow(yDiff,2) );
+    if (separation < radiusSum) {
+      if(!collision){
+        collisionCount++;
+        d3.select(".collisions span").text(collisionCount);
+        collision = true;
+      }
+      changeHighScore();
+      score = 0;
+    }
+  }
+  collision = false;
+};
+
 //moving enemies every second
-setInterval(moveEnemies, 1000);
+setInterval(moveEnemies, 2000);
 
 //Player array for d3
 var playerArray = [{ x:0,
   y:0,
   r:8}];
 
+var boundaries = {
+  maxX: gameOptions.width - gameOptions.padding,
+  maxY: gameOptions.height - gameOptions.padding,
+  minX: gameOptions.padding,
+  minY: gameOptions.padding
+};
 var drag = d3.behavior.drag()
     .on("drag", function(d,i){
       d.x += (d3.event.dx);
       d.y += (d3.event.dy);
-      d3.select(this).attr("cx", function(d){return d.x;})
-                     .attr("cy", function(d){return d.y;});
+      d3.select(this).attr("cx", function(d){return d.x > boundaries.maxX? boundaries.maxX : d.x < boundaries.minX ? boundaries.minX: d.x;})
+                     .attr("cy", function(d){return d.y > boundaries.maxY? boundaries.maxY : d.y < boundaries.minY ? boundaries.minY: d.y;});
 });
 
 //Put player on board
@@ -87,4 +120,17 @@ var createPlayer = function (){
                              .call(drag);
 };
 
+var scoreIncrease = function(){
+  score++;
+  changeHighScore();
+  d3.select(".current span").text(score);
+};
+
+var changeHighScore = function(){
+  highScore = Math.max(score, highScore);
+  d3.select(".high span").text(highScore);
+};
+
 createPlayer();
+d3.timer(collisionDetection);
+setInterval(scoreIncrease,50);
