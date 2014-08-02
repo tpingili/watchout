@@ -44,3 +44,18 @@ svg.selectAll("circle.enemy").data(enemiesArray, function(data){return data.id;}
                              .attr("cy", function(data){return data.y;})
                              .attr("r", 5)
                              .transition().duration(500).attr("r",8);
+
+var moveEnemies = function(){
+  enemiesArray.forEach(function(element){
+    element.x = randomPosX();
+    element.y = randomPosY();
+  });
+  svg.selectAll("circle.enemy").data(enemiesArray)
+                               .transition().duration(800)
+                               .attr("cx", function(data){return data.x;})
+                               .attr("cy", function(data){return data.y;})
+                               .tween("collision", collisionDetection);
+};
+
+//moving enemies every second
+setInterval(moveEnemies, 1000);
