@@ -8,7 +8,6 @@ var gameOptions = {
 var score = 0,
   highScore = 0,
   collisionCount = 0;
-var collision = false;
 
 var randomPosX = function(){
   return Math.floor(Math.random() * (gameOptions.width - 2 * gameOptions.padding));
@@ -28,7 +27,7 @@ var Enemy = function(i){
   this.id = i;
   this.x = randomPosX();
   this.y = randomPosY();
-  this.r = 8;
+  this.r = 12;
 };
 
 //pushing enemy objects into an array
@@ -43,12 +42,15 @@ var createEnemies = function(n){
 //this array has all the enemy objects
 var enemiesArray = createEnemies(gameOptions.nEnemies);
 //placing the enemies on the field
-svg.selectAll("circle.enemy").data(enemiesArray, function(data){return data.id;})
-                             .enter().append("circle")
+svg.selectAll("image.enemy").data(enemiesArray, function(data){return data.id;})
+                             .enter().append("svg:image")
                              .attr("class", "enemy")
                              .attr("id", function(data){return data.id;})
-                             .attr("cx", function(data){return data.x;})
-                             .attr("cy", function(data){return data.y;})
+                             .attr("x", function(data){return data.x;})
+                             .attr("y", function(data){return data.y;})
+                             .attr("xlink:href", "Shuriken.png")
+                             .attr("width", 25)
+                             .attr("height", 25)
                              .attr("r", function(data){return data.r;});
 
 var moveEnemies = function(){
@@ -56,14 +58,15 @@ var moveEnemies = function(){
     element.x = randomPosX();
     element.y = randomPosY();
   });
-  svg.selectAll("circle.enemy").data(enemiesArray)
+  svg.selectAll("image.enemy").data(enemiesArray)
                                .transition().duration(800)
-                               .attr("cx", function(data){return data.x;})
-                               .attr("cy", function(data){return data.y;});
+                               .attr("x", function(data){return data.x;})
+                               .attr("y", function(data){return data.y;});
 };
 
-var collisionDetection = function(enemy){
-
+var prevCollision = false;
+var collisionDetection = function(){
+  var collision = false;
   var player = playerArray[0];
   for (var i = 0; i < enemiesArray.length; i ++){
     var radiusSum = parseFloat(enemiesArray[i].r + player.r);
@@ -71,16 +74,18 @@ var collisionDetection = function(enemy){
     var yDiff = parseFloat(enemiesArray[i].y - player.y);
     var separation = Math.sqrt( Math.pow(xDiff,2) + Math.pow(yDiff,2) );
     if (separation < radiusSum) {
-      if(!collision){
-        collisionCount++;
-        d3.select(".collisions span").text(collisionCount);
-        collision = true;
-      }
-      changeHighScore();
-      score = 0;
+      collision = true;
     }
   }
-  collision = false;
+  if(collision){
+    changeHighScore();
+    score = 0;
+    if(prevCollision!== collision){
+      collisionCount++;
+      d3.select(".collisions span").text(collisionCount);
+    }
+  }
+  prevCollision = collision;
 };
 
 //moving enemies every second

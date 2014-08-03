@@ -27,10 +27,7 @@ body {
   position: relative;
 }
 
-.enemy{
-  fill: #FF9999;
-}
-
+.enemy{}
 .container {
   background: white;
   padding: 40px;
@@ -43,4 +40,4 @@ body {
   width: 800px;
 }
 /* Note: an asteroid image is included in this repo.
-Feel free to use it if you like. */
+Feel free to use it if you like. fill: #FF9999;*/
